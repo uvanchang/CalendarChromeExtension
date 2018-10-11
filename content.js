@@ -1,5 +1,12 @@
 function addToCalander() {
 
+  // if(!window.location.pathname.includes("tabs-1")) {
+  //   window.alert(window.location.pathname);
+  //   window.alert("You must be in the calendar tab.");
+  //   return;
+  // }
+
+/*
   var events = document.getElementsByClassName("fc-event-inner");
 
   for(i = 0; i < events.length; i++) {
@@ -19,11 +26,40 @@ function addToCalander() {
     //var eventLocation =
 
     // connect to Google Calendar API
-    //var request = new XMLHttpRequest();
-    //request.open("POST", "https://www.googleapis.com/calendar/v3/calendars/calendarId/events");
+    var request = new XMLHttpRequest();
+    request.open("POST", "https://www.googleapis.com/calendar/v3/calendars/calendarId/events");
+    request.send("calendarId=primary");
 
+*/
 
-  }
+  var url = new URL("https://www.googleapis.com/calendar/v3/calendars/calendarId/events");
+  var params = {calendarId: "primary"};
+  url.search = new URLSearchParams(params);
+
+  fetch(url, {
+    method : "POST",
+    body: JSON.stringify({
+      'summary': 'test event',
+      'start': {
+        'dateTime': '2018-10-28T09:00:00Z',
+        'timeZone': 'America/Los_Angeles'
+      },
+      'end': {
+        'dateTime': '2018-10-28T17:00:00Z',
+        'timeZone': 'America/Los_Angeles'
+      },
+      'recurrence': [
+        'RRULE:FREQ=WEEKLY;COUNT=1'
+      ],
+      'reminders': {
+        'useDefault': true
+      }
+    })
+  }).then(
+      response => response.text()
+  ).then(
+      html => console.log(html)
+  );
 
 }
 
@@ -37,4 +73,4 @@ tempButton.className = "button secondary";
 tempButton.addEventListener("click", addToCalander);
 
 var scheduleBar = document.getElementById("schedule-addevent-div");
-scheduleBar.insertAdjacentElement("beforeend", tempButton);
+scheduleBar.insertAdjacentElement("beforeEnd", tempButton);
