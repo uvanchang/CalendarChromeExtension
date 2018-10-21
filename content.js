@@ -32,12 +32,18 @@ function addToCalander() {
 
 */
 
+  var headers = new Headers({
+    "Authorization": "Bearer " + localStorage.getItem("token"),
+    "Content-Type": "application/json"
+  });
+
   var url = new URL("https://www.googleapis.com/calendar/v3/calendars/calendarId/events");
   var params = {calendarId: "primary"};
   url.search = new URLSearchParams(params);
 
   fetch(url, {
     method : "POST",
+    headers: headers,
     body: JSON.stringify({
       'summary': 'test event',
       'start': {
@@ -56,7 +62,14 @@ function addToCalander() {
       }
     })
   }).then(
-      response => response.text()
+    response => response.text()
+  ).then(
+    function(responseText) {
+      if(JSON.parse(responseText).hasOwnProperty('error')) {
+        window.alert("Something went wrong!\nError: " + JSON.parse(responseText).error.errors.reason);
+      }
+      return responseText;
+    }
   ).then(
       html => console.log(html)
   );

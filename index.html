@@ -1,16 +1,19 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <title>UCSD Classes Google Calendar Adder</title>
-    <style>
-      button {
-        padding: 10px;
-        background-color: #3C79F8;
-        display: inline-block;
-      }
-    </style>
-    <script type="text/javascript" src="oauth.js"></script>
+    <title>Google Calendar API Quickstart</title>
   </head>
   <body>
-    <button>Google Calendar Adder</button>
+    <p>Google Calendar API Quickstart</p>
+
+    <!--Add buttons to initiate auth sequence and sign out-->
+    <button id="signin-button" onchange="handleSignInClick()">Sign In</button>
+    <button id="signout-button" onchange="handleSignOutClick()">Sign Out</button>
+
+    <pre id="content"></pre>
+
+    <script type="text/javascript" src="calendarAuth.js"></script>
+
+    <script type="text/javascript" src="api.js"></script>
   </body>
 </html>
