@@ -12,9 +12,8 @@
     "js": ["content.js"],
     "matches": ["https://act.ucsd.edu/webreg2/*"]
   }],
-  "options_page": "options.html",
   "oauth2": {
-    "client_id": "213092874065-9jtuihhl85q5leqmc29bjfpjlhueu6nj.apps.googleusercontent.com",
+    "client_id": "213092874065-q8csmmpudemsu7qk0t3ianjrjtfgeld7.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/calendar"
     ]

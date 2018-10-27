@@ -1,9 +1,9 @@
 chrome.runtime.onInstalled.addListener(function() {
-  chrome.storage.sync.set({color: '#3aa757'}, function() {
-    console.log("The color is green.");
-  });
   chrome.identity.getAuthToken({ 'interactive': false }, function(token) {
-    window.localStorage.setItem("token", token);
+    chrome.storage.local.set({"token": token});
+    console.log("token" + chrome.storage.local.get(["token"], function(result) {
+      console.log(result.token);
+    }));
   });
 });
 
