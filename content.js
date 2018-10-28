@@ -1,11 +1,7 @@
 function addToCalander() {
 
   chrome.storage.sync.get(["token"], function(result) {
-
     var date = prompt("Enter the Monday of Week 1 date that follows the format.", "11/05/1955");
-    var dayTracker = -1;
-    var dayCount = -1;
-    var jsons = [];
 
     if(date != null) {
       try {
@@ -30,137 +26,136 @@ function addToCalander() {
       return;
     }
 
-    var events = document.getElementsByClassName("fc-event fc-event-vert fc-event-start fc-event-end wr-grid-en");
-
-    console.log(events.length);
-    for(i = 0; i < events.length; i++) {
-      console.log(i + " " + events.length);
-
-      var eventTitle = events[i].getElementsByClassName("fc-event-inner")[0].getElementsByClassName("fc-event-title")[0];
-      var eventTime = events[i].getElementsByClassName("fc-event-inner")[0].getElementsByClassName("fc-event-time")[0];
-
-      // if final schedule
-      if(eventTitle.getElementsByTagName("span").length == 0) {
-        console.log("final schedule");
-        continue;
-      }
-      var eventName = eventTitle.getElementsByTagName("span")[0].innerHTML;
-      var lectureOrDiscussion = eventTitle.getElementsByClassName("calendar-type-location")[0].getElementsByTagName("span")[0].innerHTML;
-      if(lectureOrDiscussion === "DI" ) {
-        eventName += " Section";
-      } else {
-        eventName += " Lecture";
-      }
-      var spanSplit = eventTime.getElementsByTagName("span")[0].innerHTML.trim().split(" ");
-      var eventStart = spanSplit[0];
-      var eventEnd = spanSplit[2];
-      var dayLeftVal = events[i].style.left;
-      console.log(dayLeftVal);
-
-      if(eventStart.length == 4) {
-        eventStart = "0" + eventStart;
-      }
-      if(eventEnd.length == 4) {
-        eventEnd = "0" + eventEnd;
-      }
-
-      var dateFormatStart = new Date(year + "-" + month + "-" + day + 'T' + eventStart + ':00');
-      var dateFormatEnd = new Date(year + "-" + month + "-" + day + 'T' + eventEnd + ':00');
-
-      console.log(dayTracker + " " + dayLeftVal);
-      if(dayTracker != dayLeftVal) {
-        dayTracker = dayLeftVal;
-        dayCount++;
-        console.log(dayCount);
-      }
-
-      dateFormatStart.setDate(dateFormatStart.getDate() + dayCount);
-      dateFormatEnd.setDate(dateFormatEnd.getDate() + dayCount);
-
-      jsons.push({
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + result.token,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          'summary': eventName,
-          'start': {
-            'dateTime': dateFormatStart.toISOString(),
-            'timeZone': 'America/Los_Angeles'
-          },
-          'end': {
-            'dateTime': dateFormatEnd.toISOString(),
-            'timeZone': 'America/Los_Angeles'
-          },
-          // 'recurrence': [
-          //   'RRULE:FREQ=WEEKLY;COUNT=1'
-          // ],
-          'reminders': {
-            'useDefault': true
-          }
-        })
-      });
-      console.log(jsons.length);
-
-      // fetch(url, {
-      //   method: "POST",
-      //   headers: {
-      //     "Authorization": "Bearer " + result.token,
-      //     "Content-Type": "application/json"
-      //   },
-      //   body: JSON.stringify({
-      //     'summary': eventName,
-      //     'start': {
-      //       'dateTime': dateFormatStart.toISOString(),
-      //       'timeZone': 'America/Los_Angeles'
-      //     },
-      //     'end': {
-      //       'dateTime': dateFormatEnd.toISOString(),
-      //       'timeZone': 'America/Los_Angeles'
-      //     },
-      //     // 'recurrence': [
-      //     //   'RRULE:FREQ=WEEKLY;COUNT=1'
-      //     // ],
-      //     'reminders': {
-      //       'useDefault': true
-      //     }
-      //   })
-      // }).then(
-      //   response => response.text()
-      // ).then(
-      //   function(responseText) {
-      //     if(JSON.parse(responseText).hasOwnProperty('error')) {
-      //       window.alert("Something went wrong!\nError " + JSON.parse(responseText).error.code
-      //         + ": " + JSON.parse(responseText).error.errors[0].reason + "\n" + JSON.parse(responseText).error.message);
-      //     }
-      //     return responseText;
-      //   }
-      // ).then(
-      //     html => console.log(html)
-      // );
+    var dayTracker = -1;
+    var dayCount = -1;
+    var jsons = [];
+    var dayVals = {
+      "M": 0,
+      "Tu": 1,
+      "W": 2,
+      "Th": 3,
+      "F": 4
     }
 
-    console.log("fetching");
+    var rows = document.getElementsByClassName("ui-widget-content jqgrow ui-row-ltr wr-grid-en");
+
+    for(i = 0; i < rows.length; i++) {
+
+      var cols = rows[i].getElementsByTagName("td");
+
+      // to find out what type of row it is
+      switch(cols[1].innerHTML) {
+        case "Final Exam": // final exam row
+          continue;
+          break;
+        case " ": // section row
+          var eventName = rows[i - 1].getElementsByTagName("td")[0].innerHTML + " Section";
+          break;
+        default: // lecture row
+          var eventName = cols[0].innerHTML + " Lecture";
+      }
+
+      var spanSplit = cols[8].innerHTML.trim().split("-");
+      var eventStart = spanSplit[0];
+      var eventEnd = spanSplit[1];
+
+      // TBA cell or Additional Sessions & Meetings
+      if(eventStart == null || eventEnd == null) {
+        continue;
+      }
+
+      // change to 24 hr format
+      if(eventStart.includes("p")) {
+        eventStart = eventStart.slice(0, -1);
+        var hr = parseInt(eventStart.split(":")[0]) + 12;
+        // if at 12 PM
+        if(hr == 24) {
+          hr -= 12;
+        }
+        eventStart = hr + ":" + eventStart.split(":")[1];
+      } else {
+        eventStart = eventStart.slice(0, -1);
+        if(eventStart.length == 4) {
+          eventStart = "0" + eventStart;
+        }
+      }
+      if(eventEnd.includes("p")) {
+        eventEnd = eventEnd.slice(0, -1);
+        var hr = parseInt(eventEnd.split(":")[0]) + 12;
+        // if at 12 PM
+        if(hr == 24) {
+          hr -= 12;
+        }
+        eventEnd = hr + ":" + eventEnd.split(":")[1];
+      } else {
+        eventEnd = eventEnd.slice(0, -1);
+        if(eventEnd.length == 4) {
+          eventEnd = "0" + eventEnd;
+        }
+      }
+
+      var days = cols[7].innerHTML.split(/(?=[A-Z])/);
+
+      for(j = 0; j < days.length; j++) {
+
+        var dateFormatStart = new Date(year + "-" + month + "-" + day + 'T' + eventStart + ':00');
+        var dateFormatEnd = new Date(year + "-" + month + "-" + day + 'T' + eventEnd + ':00');
+
+        dateFormatStart.setDate(dateFormatStart.getDate() + dayVals[days[j]]);
+        dateFormatEnd.setDate(dateFormatEnd.getDate() + dayVals[days[j]]);
+
+        jsons.push({
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + result.token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            'summary': eventName,
+            'start': {
+              'dateTime': dateFormatStart.toISOString(),
+              'timeZone': 'America/Los_Angeles'
+            },
+            'end': {
+              'dateTime': dateFormatEnd.toISOString(),
+              'timeZone': 'America/Los_Angeles'
+            },
+            'recurrence': [
+              'RRULE:FREQ=WEEKLY;COUNT=10'
+            ],
+            'reminders': {
+              'useDefault': true
+            }
+          })
+        });
+
+      }
+
+    }
 
     var url = new URL("https://www.googleapis.com/calendar/v3/calendars/calendarId/events");
     var params = {calendarId: "fvd6tfre52bthv8sgtjs6hib78@group.calendar.google.com"}; // TODO change to primary
     url.search = new URLSearchParams(params);
 
     let requests = jsons.map(json => fetch(url, json));
-    Promise.all(requests).then(
-      response => response.text()
-    ).then(
-      function(responseText) {
-        if(JSON.parse(responseText).hasOwnProperty('error')) {
-          window.alert("Something went wrong!\nError " + JSON.parse(responseText).error.code
-            + ": " + JSON.parse(responseText).error.errors[0].reason + "\n" + JSON.parse(responseText).error.message);
+    Promise.all(requests).then(function(responses) {
+      var requestsTexts = [];
+      var errMessage = "";
+      for(i = 0; i < requests.length; i++) {
+        var cloneResponse = responses[i].clone();
+        requestsTexts.push(cloneResponse.text());
+        if(JSON.parse(cloneResponse.text()).hasOwnProperty('error')) {
+          errMessage += "Error " + JSON.parse(cloneResponse.text()).error.code + ": " +
+            JSON.parse(cloneResponse.text()).error.errors[0].reason + "\n" + JSON.parse(cloneResponse.text()).error.message + "\n"
         }
-        return responseText;
       }
-    ).then(
-        html => console.log(html)
-    );
+      if(errMessage != "") {
+        window.alert("Something went wrong!\n" + errMessage);
+      } else {
+        window.alert("Added classes successfully!");
+      }
+      return requestsTexts;
+    });
 
   });
 }
