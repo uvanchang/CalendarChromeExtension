@@ -1,6 +1,6 @@
 {
   "name": "UCSD Class Scheduler Chrome Extension",
-  "version": "1.1",
+  "version": "1.2",
   "description": "Adds UCSD classes from webreg to your Google Calendar.",
   "permissions": ["activeTab", "declarativeContent", "storage", "identity"],
   "background": {
