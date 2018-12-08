@@ -134,20 +134,22 @@ function addToCalander() {
     }
 
     var url = new URL("https://www.googleapis.com/calendar/v3/calendars/calendarId/events");
-    var params = {calendarId: "fvd6tfre52bthv8sgtjs6hib78@group.calendar.google.com"}; // TODO change to primary
+    //var params = {calendarId: "fvd6tfre52bthv8sgtjs6hib78@group.calendar.google.com"}; // TODO change to primary
+    var params = {calendarId: "primary"};
     url.search = new URLSearchParams(params);
 
     let requests = jsons.map(json => fetch(url, json));
-    Promise.all(requests).then(function(responses) {
+    Promise.all(requests).then(responses => {
       var requestsTexts = [];
       var errMessage = "";
       for(i = 0; i < requests.length; i++) {
-        var cloneResponse = responses[i].clone();
-        requestsTexts.push(cloneResponse.text());
-        if(JSON.parse(cloneResponse.text()).hasOwnProperty('error')) {
-          errMessage += "Error " + JSON.parse(cloneResponse.text()).error.code + ": " +
-            JSON.parse(cloneResponse.text()).error.errors[0].reason + "\n" + JSON.parse(cloneResponse.text()).error.message + "\n"
-        }
+        var cloneResponse = responses[i].text();
+        requestsTexts.push(cloneResponse);
+        console.log("cloneResponse = " + cloneResponse);
+        // if(JSON.parse(cloneResponse).hasOwnProperty('error')) {
+        //   errMessage += "Error " + JSON.parse(cloneResponse).error.code + ": " +
+        //     JSON.parse(cloneResponse).error.errors[0].reason + "\n" + JSON.parse(cloneResponse).error.message + "\n"
+        // }
       }
       if(errMessage != "") {
         window.alert("Something went wrong!\n" + errMessage);
