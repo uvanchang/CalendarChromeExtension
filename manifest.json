@@ -1,21 +1,29 @@
 {
-  "name": "Getting Started Example",
-  "version": "1.0",
-  "description": "Build an Extension!",
-  "permissions": ["activeTab", "declarativeContent", "storage"],
+  "name": "UCSD Class Scheduler",
+  "version": "1.4",
+  "icons": {
+    "128": "images/logo128.png"
+  },
+  "description": "Adds UCSD classes from webreg to your Google Calendar.",
+  "permissions": ["activeTab", "declarativeContent", "storage", "identity"],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
   },
-  "page_action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "images/get_started16.png",
-      "32": "images/get_started32.png",
-      "48": "images/get_started48.png",
-      "128": "images/get_started128.png"
-    }
+  "content_scripts": [{
+    "css": ["css/styles.css"],
+    "js": ["content.js"],
+    "matches": ["https://act.ucsd.edu/webreg2/*"]
+  }],
+  "oauth2": {
+    "client_id": "213092874065-q8csmmpudemsu7qk0t3ianjrjtfgeld7.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/calendar"
+    ]
   },
-  "options_page": "options.html",
+  "browser_action": {
+    "default_title": "UCSD Class Scheduler"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhzGDfnFYeZ3Xq2te0W0GsWTdEvqP/WCcc82q/SOirsKA9CBEk9VfoPCOuWa15CHk6Osx6SNytbd5Iy8hEdev/F/OFuJPbhUToE5PsZ3zup61wNr2LcGCq2CmF8bvbc1cESHorc7gcXXXOcK9wea3CqO43FZ0N0a3LPg90xQMZOQfGagbUUKRTR5DDIPfXbagEI41CxOxVzsm50SBAE2l/DaKfzWNpy+dze7BKHom/myzEp62y5ph8cURvnKeA6FOc19t23sU8QhZ43CEHl1lonZXdx4wOg5S3QtS4vDagGss9tbIEs4ODbdF7uoDeAb46Sfsh8vut+b/bT419MszswIDAQAB",
   "manifest_version": 2
 }
