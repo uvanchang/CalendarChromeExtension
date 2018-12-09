@@ -1,12 +1,17 @@
 chrome.runtime.onInstalled.addListener(function() {
-  chrome.identity.getAuthToken({ 'interactive': true }, function(token) {
-    chrome.storage.sync.set({"token": token});
-    console.log("token" + chrome.storage.sync.get(["token"], function(result) {
-      console.log(result.token);
-    }));
+  chrome.storage.sync.set({
+    "token": "notSet"
+  });
+  chrome.storage.sync.set({
+    "signedIn": false
+  });
+  chrome.tabs.create({
+    url: 'index.html'
   });
 });
 
 chrome.browserAction.onClicked.addListener(function() {
-  chrome.tabs.create({url: 'index.html'});
+  chrome.tabs.create({
+    url: 'index.html'
+  });
 });
