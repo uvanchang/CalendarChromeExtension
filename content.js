@@ -1,4 +1,4 @@
-function addToCalander() {
+function openDateSelector() {
 
   chrome.storage.sync.get(["token"], function(result) {
 
@@ -7,30 +7,28 @@ function addToCalander() {
       return;
     }
 
-    var date = prompt("Enter the Monday of Week 1 date that follows the format.", "11/05/1955");
+    var dateSelector = window.open(chrome.runtime.getURL("DateSelector.html"), "UCSD Class Scheduler", "height=385,width=293,menubar=no,status=no,titlebar=no");
 
-    if (date != null) {
-      try {
-        // if not correct format
-        if (date.length != 10) {
-          window.alert("The format must be in the form ##/##/####.");
-          return;
-        }
-        var split = date.split("/");
-        var month = split[0];
-        var day = split[1];
-        var year = split[2];
-
-        // to test if it is a real date
-        (new Date(year + "-" + month + "-" + day + 'T01:00:00')).toISOString();
-      } catch (err) {
-        window.alert("The format must be in the form ##/##/####.");
-        return;
+    var timer = setInterval(function() {
+      if(dateSelector.closed) {
+        clearInterval(timer);
+        addToCalander(result);
       }
-    } else {
-      window.alert("The format must be in the form ##/##/####.");
-      return;
-    }
+    }, 500);
+
+  });
+
+}
+
+function addToCalander(result) {
+
+  chrome.storage.sync.get(["date"], function(savedDate) {
+    date = savedDate.date;
+
+    var split = date.split("/");
+    var month = split[0];
+    var day = split[1];
+    var year = split[2];
 
     var dayTracker = -1;
     var dayCount = -1;
@@ -52,13 +50,15 @@ function addToCalander() {
       // to find out what type of row it is
       switch (cols[1].innerHTML) {
         case "Final Exam": // final exam row
-          continue;
-          break;
+        continue;
+        break;
         case " ": // section row
-          var eventName = rows[i - 1].getElementsByTagName("td")[0].innerHTML + " Section";
-          break;
+        var eventName = rows[i - 1].getElementsByTagName("td")[0].innerHTML + " Section";
+        eventName = eventName.replace(/\s\s+/g, ' ');
+        break;
         default: // lecture row
-          var eventName = cols[0].innerHTML + " Lecture";
+        var eventName = cols[0].innerHTML + " Lecture";
+        eventName = eventName.replace(/\s\s+/g, ' ');
       }
 
       var spanSplit = cols[8].innerHTML.trim().split("-");
@@ -140,7 +140,7 @@ function addToCalander() {
     }
 
     var url = new URL("https://www.googleapis.com/calendar/v3/calendars/calendarId/events");
-    //var params = {calendarId: "fvd6tfre52bthv8sgtjs6hib78@group.calendar.google.com"};
+    // var params = {calendarId: "fvd6tfre52bthv8sgtjs6hib78@group.calendar.google.com"};
     var params = {
       calendarId: "primary"
     };
@@ -171,14 +171,13 @@ function addToCalander() {
 
 }
 
-
 var tempButton = document.createElement("input");
 tempButton.id = "calendarButton";
 tempButton.align = "middle";
 tempButton.setAttribute("type", "button");
 tempButton.value = "Add to Google Calendar";
 tempButton.className = "button secondary";
-tempButton.addEventListener("click", addToCalander);
+tempButton.addEventListener("click", openDateSelector);
 
 var scheduleBar = document.getElementById("schedule-addevent-div");
 if (scheduleBar != null) {
