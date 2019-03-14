@@ -5,7 +5,7 @@
     "128": "images/logo128.png"
   },
   "description": "Adds UCSD classes from webreg to your Google Calendar.",
-  "permissions": ["activeTab", "declarativeContent", "storage", "identity", "tabs"],
+  "permissions": ["activeTab", "declarativeContent", "storage", "identity"],
   "background": {
     "scripts": ["background.js"],
     "persistent": false
