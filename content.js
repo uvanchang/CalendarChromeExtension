@@ -9,6 +9,7 @@ function openDateSelector() {
 
     var dateSelector = window.open(chrome.runtime.getURL("DateSelector.html"), "UCSD Class Scheduler", "height=385,width=293,menubar=no,status=no,titlebar=no");
 
+    // keep checking if the calendar window has been closed or not
     var timer = setInterval(function() {
       if(dateSelector.closed) {
         clearInterval(timer);
@@ -33,13 +34,20 @@ function addToCalander(result) {
     var dayTracker = -1;
     var dayCount = -1;
     var jsons = [];
+    var dayStrings = {
+      "M": "MO",
+      "Tu": "TU",
+      "W": "WE",
+      "Th": "TH",
+      "F": "FR"
+    };
     var dayVals = {
       "M": 0,
       "Tu": 1,
       "W": 2,
       "Th": 3,
       "F": 4
-    }
+    };
 
     var rows = document.getElementsByClassName("ui-widget-content jqgrow ui-row-ltr wr-grid-en");
 
@@ -47,18 +55,28 @@ function addToCalander(result) {
 
       var cols = rows[i].getElementsByTagName("td");
 
+      var isFinal = false;
+      var prevLectureName;
+
       // to find out what type of row it is
-      switch (cols[1].innerHTML) {
-        case "Final Exam": // final exam row
-        continue;
-        break;
-        case " ": // section row
-        var eventName = rows[i - 1].getElementsByTagName("td")[0].innerHTML + " Section";
+      switch (cols[3].innerHTML) {
+        case "FI": // final exam row
+        isFinal = true;
+        var eventName = prevLectureName + " Final";
         eventName = eventName.replace(/\s\s+/g, ' ');
         break;
-        default: // lecture row
+        case "DI": // section row
+        var eventName = prevLectureName + " Section";
+        eventName = eventName.replace(/\s\s+/g, ' ');
+        break;
+        case "LE": // lecture row
         var eventName = cols[0].innerHTML + " Lecture";
         eventName = eventName.replace(/\s\s+/g, ' ');
+        prevLectureName = cols[0].innerHTML;
+        break;
+        default: // blank or review session
+        continue;
+        break;
       }
 
       var spanSplit = cols[8].innerHTML.trim().split("-");
@@ -100,16 +118,120 @@ function addToCalander(result) {
         }
       }
 
+      var location = "";
+      if(!cols[9].innerText.includes("TBA") && !cols[10].innerText.includes("TBA")) {
+        location = cols[9].innerText + " " + cols[10].innerText;
+        location = location.replace(/\s\s+/g, ' ');
+      }
+
+      if(isFinal) {
+
+        var finalDate = cols[7].innerHTML.split("/");
+        var fMonth = finalDate[0].split(" ")[1];
+        var fDay = finalDate[1];
+        var fYear = finalDate[2];
+
+        var dateFormatStart = new Date(fYear + "-" + fMonth + "-" + fDay + 'T' + eventStart + ':00');
+        var dateFormatEnd = new Date(fYear + "-" + fMonth + "-" + fDay + 'T' + eventEnd + ':00');
+
+        // add one minute to end time of Final Exam
+        dateFormatEnd.setTime(dateFormatEnd.getTime() + 60000);
+
+        // if location was not TBA
+        if(location.localeCompare("") != 0) {
+          jsons.push({
+            method: "POST",
+            headers: {
+              "Authorization": "Bearer " + result.token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              'summary': eventName,
+              'location': location,
+              'start': {
+                'dateTime': dateFormatStart.toISOString(),
+                'timeZone': 'America/Los_Angeles'
+              },
+              'end': {
+                'dateTime': dateFormatEnd.toISOString(),
+                'timeZone': 'America/Los_Angeles'
+              },
+              'reminders': {
+                'useDefault': true
+              }
+            })
+          });
+        } else { // if location was TBA
+          jsons.push({
+            method: "POST",
+            headers: {
+              "Authorization": "Bearer " + result.token,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              'summary': eventName,
+              'start': {
+                'dateTime': dateFormatStart.toISOString(),
+                'timeZone': 'America/Los_Angeles'
+              },
+              'end': {
+                'dateTime': dateFormatEnd.toISOString(),
+                'timeZone': 'America/Los_Angeles'
+              },
+              'reminders': {
+                'useDefault': true
+              }
+            })
+          });
+        }
+
+        continue;
+      }
+
       var days = cols[7].innerHTML.split(/(?=[A-Z])/);
+      var recurrence = "COUNT=" + days.length * 10 + ";BYDAY=";
 
-      for (j = 0; j < days.length; j++) {
+      for(j = 0; j < days.length; j++) {
+        if(j != 0) {
+          recurrence += ",";
+        }
+        recurrence += dayStrings[days[j]];
+      }
 
-        var dateFormatStart = new Date(year + "-" + month + "-" + day + 'T' + eventStart + ':00');
-        var dateFormatEnd = new Date(year + "-" + month + "-" + day + 'T' + eventEnd + ':00');
+      var dateFormatStart = new Date(year + "-" + month + "-" + day + 'T' + eventStart + ':00');
+      var dateFormatEnd = new Date(year + "-" + month + "-" + day + 'T' + eventEnd + ':00');
 
-        dateFormatStart.setDate(dateFormatStart.getDate() + dayVals[days[j]]);
-        dateFormatEnd.setDate(dateFormatEnd.getDate() + dayVals[days[j]]);
+      dateFormatStart.setDate(dateFormatStart.getDate() + dayVals[days[0]]);
+      dateFormatEnd.setDate(dateFormatEnd.getDate() + dayVals[days[0]]);
 
+      // if location was not TBA
+      if(location.localeCompare("") != 0) {
+        jsons.push({
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + result.token,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            'summary': eventName,
+            'location': location,
+            'start': {
+              'dateTime': dateFormatStart.toISOString(),
+              'timeZone': 'America/Los_Angeles'
+            },
+            'end': {
+              'dateTime': dateFormatEnd.toISOString(),
+              'timeZone': 'America/Los_Angeles'
+            },
+            'recurrence': [
+              'RRULE:FREQ=WEEKLY;' + recurrence
+            ],
+            'reminders': {
+              'useDefault': true
+            }
+          })
+        });
+      } else { // if location was TBA
         jsons.push({
           method: "POST",
           headers: {
@@ -127,14 +249,13 @@ function addToCalander(result) {
               'timeZone': 'America/Los_Angeles'
             },
             'recurrence': [
-              'RRULE:FREQ=WEEKLY;COUNT=10'
+              'RRULE:FREQ=WEEKLY;' + recurrence
             ],
             'reminders': {
               'useDefault': true
             }
           })
         });
-
       }
 
     }
