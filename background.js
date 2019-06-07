@@ -1,8 +1,6 @@
 chrome.runtime.onInstalled.addListener(function() {
   chrome.storage.sync.set({
-    "token": "notSet"
-  });
-  chrome.storage.sync.set({
+    "token": "notSet",
     "signedIn": false
   });
   chrome.tabs.create({
