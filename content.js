@@ -3,17 +3,17 @@ function openDateSelector() {
   chrome.storage.sync.get(["token"], function(result) {
 
     if (result.token == "notSet") {
-      window.alert("You need to sign in to add classes. Click on the extension icon to sign in.");
+      window.alert("You need to sign in to add classes. Click on the extension icon to sign in, and then refresh this page.");
       return;
     }
 
-    var dateSelector = window.open(chrome.runtime.getURL("DateSelector.html"), "UCSD Class Scheduler", "height=385,width=293,menubar=no,status=no,titlebar=no");
+    var dateSelector = window.open(chrome.runtime.getURL("DateSelector.html"), "UCSD Class Scheduler", "height=396,width=590,menubar=no,status=no,titlebar=no");
 
     // keep checking if the calendar window has been closed or not
     var timer = setInterval(function() {
       if(dateSelector.closed) {
         clearInterval(timer);
-        addToCalander(result);
+        addToCalender(result);
       }
     }, 500);
 
@@ -21,10 +21,10 @@ function openDateSelector() {
 
 }
 
-function addToCalander(result) {
+function addToCalender(result) {
 
-  chrome.storage.sync.get(["date"], function(savedDate) {
-    date = savedDate.date;
+  chrome.storage.sync.get(["date", "calendar"], function(savedData) {
+    date = savedData.date;
 
     var split = date.split("/");
     var month = split[0];
@@ -261,9 +261,8 @@ function addToCalander(result) {
     }
 
     var url = new URL("https://www.googleapis.com/calendar/v3/calendars/calendarId/events");
-    // var params = {calendarId: "fvd6tfre52bthv8sgtjs6hib78@group.calendar.google.com"};
     var params = {
-      calendarId: "primary"
+      calendarId: savedData.calendar
     };
     url.search = new URLSearchParams(params);
 
@@ -274,11 +273,6 @@ function addToCalander(result) {
       for (i = 0; i < requests.length; i++) {
         var cloneResponse = responses[i].text();
         requestsTexts.push(cloneResponse);
-        console.log("cloneResponse = " + cloneResponse);
-        // if(JSON.parse(cloneResponse).hasOwnProperty('error')) {
-        //   errMessage += "Error " + JSON.parse(cloneResponse).error.code + ": " +
-        //     JSON.parse(cloneResponse).error.errors[0].reason + "\n" + JSON.parse(cloneResponse).error.message + "\n"
-        // }
       }
       if (errMessage != "") {
         window.alert("Something went wrong!\n" + errMessage);

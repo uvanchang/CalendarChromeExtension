@@ -14,19 +14,28 @@
 
 <body background="images/backgroundPopUp.png">
   <div class="container">
-    <div class="col-sm-5">
-      <div class="row">
-        <div class="form-group">
-          <label class="control-label" for="date">Select the Monday of Week 1 date.</label>
-          <div class="card">
-            <div class="card-body" id="calendar" align="center"></div>
+    <div class="row">
+      <div class="col">
+        <div class="row" style="padding-top: 30px; padding-right: 30px">
+          <div class="form-group">
+            <div class="card">
+              <div class="card-body" id="calendar" align="center">Select the Monday of Week 1 date</div>
+            </div>
+            <input type="hidden" id="my_hidden_input">
           </div>
-          <input type="hidden" id="my_hidden_input">
         </div>
       </div>
-      <div class="row">
-        <div class="form-group">
-          <button class="btn btn-primary" id="button">Submit</button>
+      <div class="col">
+        <div class="row" style="padding-top: 30px">
+          <div class="form-group">
+            <div class="card">
+              <div class="card-body" align="center">
+                <label>Select which calendar to add your classes to</label>
+                <select id="calendars"></select>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="button" style="display: block; margin: 0 auto;">Submit</button>
         </div>
       </div>
     </div>
