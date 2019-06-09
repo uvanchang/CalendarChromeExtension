@@ -29,3 +29,11 @@ document.getElementById("button").addEventListener("click", function() {
     window.close();
   }
 });
+
+window.onload=function()
+ {
+   chrome.storage.sync.set({
+     "date": "",
+     "calendar": ""
+   });
+ }

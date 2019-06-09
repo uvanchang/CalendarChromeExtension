@@ -7,13 +7,17 @@ function openDateSelector() {
       return;
     }
 
-    var dateSelector = window.open(chrome.runtime.getURL("DateSelector.html"), "UCSD Class Scheduler", "height=396,width=590,menubar=no,status=no,titlebar=no");
+    var dateSelector = window.open(chrome.runtime.getURL("DateSelector.html"), "UCSD Class Scheduler", "height=396,width=950,menubar=no,status=no,titlebar=no");
 
     // keep checking if the calendar window has been closed or not
     var timer = setInterval(function() {
       if(dateSelector.closed) {
         clearInterval(timer);
-        addToCalender(result);
+        chrome.storage.sync.get(["date", "calendar"], function(savedData) {
+          if(savedData.date != "" && savedData.calendar != "") {
+            addToCalender(result);
+          }
+        });
       }
     }, 500);
 
@@ -70,9 +74,15 @@ function addToCalender(result) {
         eventName = eventName.replace(/\s\s+/g, ' ');
         break;
         case "LE": // lecture row
-        var eventName = cols[0].innerHTML + " Lecture";
+        if(cols[0].innerHTML != " ") {
+          prevLectureName = cols[0].innerHTML;
+        }
+        var eventName = prevLectureName + " Lecture";
         eventName = eventName.replace(/\s\s+/g, ' ');
-        prevLectureName = cols[0].innerHTML;
+        break;
+        case "LA": // lab row
+        var eventName = prevLectureName + " Lab";
+        eventName = eventName.replace(/\s\s+/g, ' ');
         break;
         default: // blank or review session
         continue;
@@ -203,7 +213,7 @@ function addToCalender(result) {
 
       dateFormatStart.setDate(dateFormatStart.getDate() + dayVals[days[0]]);
       dateFormatEnd.setDate(dateFormatEnd.getDate() + dayVals[days[0]]);
-
+      console.log(eventName);
       // if location was not TBA
       if(location.localeCompare("") != 0) {
         jsons.push({
