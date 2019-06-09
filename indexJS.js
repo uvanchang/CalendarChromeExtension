@@ -2,9 +2,9 @@ function logout() {
   revokeToken();
   chrome.storage.sync.set({
     "token": "notSet",
-    "signedIn": false
+    "btnSignIn": true
   }, function() {
-    location.reload();
+    document.getElementById("signInOutButton").innerHTML = "Sign In";
   });
   console.log("Signed out.");
 }
@@ -15,38 +15,41 @@ function login() {
   }, function(token) {
     if (chrome.runtime.lastError) {
       // if user closes window
-      console.log(chrome.runtime.lastError);
+      console.log("Closed window");
       return;
     }
     chrome.storage.sync.set({
-      "token": token,
-      "signedIn": true
+      "token": token
     }, function() {
-      location.reload();
+
+      var request = new XMLHttpRequest();
+      request.open("GET", "https://www.googleapis.com/calendar/v3/users/me/calendarList");
+      request.setRequestHeader("Authorization", "Bearer " + token);
+      request.onload = function() {
+        if (request.status >= 200 && request.status < 400) {
+          var calendars = [];
+          var data = JSON.parse(this.response);
+
+          data.items.forEach((calendar) => {
+            calendars.push([calendar.summary, calendar.id]);
+          });
+          chrome.storage.sync.set({
+            "calendars": calendars,
+            "btnSignIn": false
+          });
+          console.log("Request status: " + request.status);
+
+        } else {
+          console.log("Error in API call.");
+        }
+
+      };
+      request.send();
+
+      document.getElementById("signInOutButton").innerHTML = "Sign Out";
+
+      console.log("Signed in.");
     });
-
-    var request = new XMLHttpRequest();
-    request.open("GET", "https://www.googleapis.com/calendar/v3/users/me/calendarList");
-    request.setRequestHeader("Authorization", "Bearer " + token);
-    request.onload = function() {
-      if (request.status >= 200 && request.status < 400) {
-        var calendars = [];
-        var data = JSON.parse(this.response);
-        console.log(data);
-        data.items.forEach((calendar) => {
-          calendars.push([calendar.summary, calendar.id]);
-        });
-        chrome.storage.sync.set({
-          "calendars": calendars
-        });
-
-      } else {
-        console.log("Error in API call.");
-      }
-
-    };
-    request.send();
-
   });
 }
 
@@ -57,45 +60,41 @@ function revokeToken() {
   function(current_token) {
     if (!chrome.runtime.lastError) {
 
-      // @corecode_begin removeAndRevokeAuthToken
-      // @corecode_begin removeCachedAuthToken
-      // Remove the local cached token
       chrome.identity.removeCachedAuthToken({
         token: current_token
       },
       function() {});
-      // @corecode_end removeCachedAuthToken
 
-      // Make a request to revoke token in the server
       var request = new XMLHttpRequest();
-      request.open("GET", "https://accounts.google.com/o/oauth2/revoke?token=" +
-      current_token);
+      request.open("GET", "https://accounts.google.com/o/oauth2/revoke?token=" + current_token);
+      request.onload = function() {
+        console.log("Request Status: " + request.status);
+      }
       request.send();
-      // @corecode_end removeAndRevokeAuthToken
 
     }
   });
 }
 
 function handleSignInOut() {
-  chrome.storage.sync.get(["signedIn"], function(result) {
-
-    if (result.signedIn) {
+  chrome.storage.sync.get(["btnSignIn"], function(result) {
+    if (!result.btnSignIn) {
       logout();
     } else {
       login();
     }
-
   });
+
 }
 
 document.getElementById("signInOutButton").onclick = handleSignInOut;
-chrome.storage.sync.get(["signedIn"], function(result) {
-
-  if (result.signedIn) {
-    document.getElementById("signInOutButton").innerHTML = "Sign Out";
-  } else {
-    document.getElementById("signInOutButton").innerHTML = "Sign In";
-  }
-
-});
+window.onload=function()
+ {
+      chrome.storage.sync.get(["btnSignIn"], function(result) {
+        if(!result.btnSignIn) {
+          document.getElementById("signInOutButton").innerHTML = "Sign Out";
+        } else {
+          document.getElementById("signInOutButton").innerHTML = "Sign In";
+        }
+      });
+ }
